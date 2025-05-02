@@ -19,9 +19,10 @@ from .admin_login import admin_required
 from .models import db, Metadata
 from . import config
 from .objects import FORBIDDEN_IDS
+from .pub_sub import *
 
 mod = APIRouter()
-redis_client = redis.Redis(host='alt.data-one.dev.planx-pla.net', port=6379, db=0)
+pub_sub_client = PubSubClient()
 channel = 'my_channel'
 
 @mod.post("/metadata")
@@ -72,7 +73,7 @@ async def batch_create_metadata(
     # Check if we created any new keys
     if created:
         for created_metadata_guid in created:
-            redis_client.publish(channel, "POST " + str(created_metadata_guid))
+            pub_sub_client.publish(channel, "POST " + str(created_metadata_guid))
     return dict(
         created=created, updated=updated, conflict=conflict, bad_input=bad_input
     )
@@ -112,8 +113,8 @@ async def create_metadata(guid, data: dict, overwrite: bool = False):
         except UniqueViolationError:
             raise HTTPException(HTTP_409_CONFLICT, f"Conflict: {guid}")
     if created:
-        # redis_client.publish(channel, "testingPOST-GUID")
-        redis_client.publish(channel, "POST " + str(guid) + " " + json.dumps(data))
+        # pub_sub_client.publish(channel, "testingPOST-GUID")
+        pub_sub_client.publish(channel, "POST " + str(guid) + " " + json.dumps(data))
         return JSONResponse(rv["data"], HTTP_201_CREATED)
     else:
         return rv["data"]
@@ -136,7 +137,7 @@ async def update_metadata(guid, data: dict, merge: bool = False):
         .gino.first()
     )
     if metadata:
-        redis_client.publish(channel, "PUT " + str(guid))
+        pub_sub_client.publish(channel, "PUT " + str(guid))
         return metadata.data
     else:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Not found: {guid}")
@@ -151,7 +152,7 @@ async def delete_metadata(guid):
         .gino.first()
     )
     if metadata:
-        redis_client.publish(channel, "DELETE " + str(guid))
+        pub_sub_client.publish(channel, "DELETE " + str(guid))
         return metadata.data
     else:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Not found: {guid}")
