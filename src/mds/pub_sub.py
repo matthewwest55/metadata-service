@@ -10,7 +10,7 @@ class PubSubClient():
         self.client = get_redis_client('alt.data-one.dev.planx-pla.net', 6739, 0)
 
     def publish(self, channel: str, message: str):
-        publish(self.client, channel, message)
+        redis_publish(self.client, channel, message)
 
     def subscribe():
         pass
