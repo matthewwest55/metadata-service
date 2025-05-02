@@ -22,7 +22,9 @@ from .objects import FORBIDDEN_IDS
 from .pub_sub import *
 
 mod = APIRouter()
+print("getting client")
 pub_sub_client = PubSubClient()
+print("got client")
 channel = 'my_channel'
 
 @mod.post("/metadata")
@@ -73,7 +75,9 @@ async def batch_create_metadata(
     # Check if we created any new keys
     if created:
         for created_metadata_guid in created:
+            print("publishing data")
             pub_sub_client.publish(channel, "POST " + str(created_metadata_guid))
+            print("published data")
     return dict(
         created=created, updated=updated, conflict=conflict, bad_input=bad_input
     )
@@ -114,7 +118,9 @@ async def create_metadata(guid, data: dict, overwrite: bool = False):
             raise HTTPException(HTTP_409_CONFLICT, f"Conflict: {guid}")
     if created:
         # pub_sub_client.publish(channel, "testingPOST-GUID")
+        print("publishing data 2")
         pub_sub_client.publish(channel, "POST " + str(guid) + " " + json.dumps(data))
+        print("published data 2")
         return JSONResponse(rv["data"], HTTP_201_CREATED)
     else:
         return rv["data"]
