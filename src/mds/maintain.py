@@ -23,11 +23,10 @@ from .objects import FORBIDDEN_IDS
 mod = APIRouter()
 redis_client = redis.Redis(host='alt.data-one.dev.planx-pla.net', port=6379, db=0)
 channel = 'my_channel'
-redis_client.publish(channel, "running")
 
 @mod.post("/metadata")
 async def batch_create_metadata(
-    request: Request, data_list: list, overwrite: bool = True
+    request: Request, data_list: list[dict], overwrite: bool = True
 ):
     """Create metadata in batch."""
     request.scope.get("add_close_watcher", lambda: None)()
@@ -114,7 +113,7 @@ async def create_metadata(guid, data: dict, overwrite: bool = False):
             raise HTTPException(HTTP_409_CONFLICT, f"Conflict: {guid}")
     if created:
         # redis_client.publish(channel, "testingPOST-GUID")
-        redis_client.publish(channel, "POST " + str(guid))
+        redis_client.publish(channel, "POST " + str(guid) + " " + json.dumps(data))
         return JSONResponse(rv["data"], HTTP_201_CREATED)
     else:
         return rv["data"]
