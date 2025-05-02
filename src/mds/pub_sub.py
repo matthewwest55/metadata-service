@@ -7,10 +7,12 @@ class PubSubClient():
     client:redis.Redis = None
 
     def __init__(self):
-        self.client = get_redis_client('alt.data-one.dev.planx-pla.net', 6739, 0)
+        self.client = get_redis_client('alt.data-one.dev.planx-pla.net', 6379, 0)
 
     def publish(self, channel: str, message: str):
+        print("before redis publish")
         redis_publish(self.client, channel, message)
+        print("after redis publish")
 
     def subscribe():
         pass
