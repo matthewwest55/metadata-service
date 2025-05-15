@@ -12,7 +12,7 @@ import json
 from mds.agg_mds.commons import MDSInstance, ColumnsToFields, Commons, parse_config
 from typing import Any, Optional
 from pathlib import Path
-from pub_sub import PubSubClient
+from ..pub_sub import PubSubClient
 
 mod = APIRouter()
 url_parts = urlparse(config.ES_ENDPOINT)
