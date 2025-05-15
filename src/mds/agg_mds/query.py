@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Path, Query, APIRouter, Request
 from starlette.status import HTTP_404_NOT_FOUND
-from mds import config
+from mds import config, logger
 from mds.agg_mds import datastore
 from typing import Any, Dict, List
 from pydantic import BaseModel
@@ -12,6 +12,7 @@ import json
 from mds.agg_mds.commons import MDSInstance, ColumnsToFields, Commons, parse_config
 from typing import Any, Optional
 from pathlib import Path
+from pub_sub import PubSubClient
 
 mod = APIRouter()
 url_parts = urlparse(config.ES_ENDPOINT)
@@ -119,14 +120,13 @@ async def join_mesh(ip_address:str, hostname:str, channel_name:str):
 async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     # Setup connection to Redis
     # Gonna hard-code one ip address for now, will fix with config later
-    redis_client = redis.Redis(host=ip_address, port=6379, db=0)
+    pubsub_client = PubSubClient()
     channel = channel_name
 
     # 2. Make redis spin
-    pubsub = redis_client.pubsub()
-    pubsub.subscribe(channel)
+    pubsub_client.subscribe(channel)
     print(f"Subscribed to {channel}. Waiting for messages...")
-    for message in pubsub.listen():
+    for message in pubsub_client.listen():
         if message['type'] == 'message':
             message_data = message['data'].decode('utf-8')
             # print(f"Received: {message_data}")
