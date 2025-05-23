@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import redis
 import threading
 import asyncio
+import time
 from urllib.parse import urlparse
 import json
 from mds.agg_mds.commons import MDSInstance, ColumnsToFields, Commons, parse_config
@@ -124,47 +125,62 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     channel = channel_name
 
     # 2. Make redis spin
-    pubsub_client.subscribe(channel)
+    # pubsub_client.subscribe(channel)
     print(f"Subscribed to {channel}. Waiting for messages...")
-    for message in pubsub_client.sub_client.listen():
-        if message['type'] == 'message':
-            message_data = message['data'].decode('utf-8')
-            # print(f"Received: {message_data}")
-            message_array = message_data.split(" ", 2)
-            rest_route = message_array[0]
-            guid = message_array[1]
-            data = message_array[2]
-            # 3. Make switch statement to update ES according to redis updates
-            # post
-            if rest_route == "POST":
-                # print(f"Getting https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
-                print("Got data, doing thing now...")
-                print(data)
+    last_index = "-"
+    while True:
+        message = pubsub_client.xrange(channel, last_index, "+", 1)
+        
+        # Check if there are any new entries. If not, wait and check again
+        if len(message) == 0:
+            time.sleep(1)
+            continue
 
-                # get the data
-                results = {guid: {}}
-                # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
-                json_data = json.loads(data)
-                results[guid].update(json_data)
+        time_index = message[0][0].decode('utf-8')
+        read_data = message[0][1]
+        ms_time_index = time_index.split("-")[0]
 
-                # print(len(json_data))
+        # increment last_index (is this okay? can I assume unique timestamps...)
+        last_index = str(int(ms_time_index) + 1) + "-0"
 
-                # Add to ES
-                # for name, common in commons.gen3_commons.items():
-                for name, common in commons.adapter_commons.items():
-                    # print(common)
-                    # print(results)
-                    await populate_metadata(name, common, results, False)
+        my_index = 'message'.encode('utf-8')
+        my_data = read_data[my_index].decode('utf-8')
 
-            # put
-            elif rest_route == "PUT":
-                print("PUT not implemented")
-                pass
+        message_array = my_data.split(" ", 2)
+        rest_route = message_array[0]
+        guid = message_array[1]
+        data = message_array[2]
+        # 3. Make switch statement to update ES according to redis updates
+        # post
+        if rest_route == "POST":
+            # print(f"Getting https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
+            print("Got data, doing thing now...")
+            print(data)
 
-            # delete
-            elif rest_route == "DELETE":
-                print("DELETE not implemented")
-                pass
+            # get the data
+            results = {guid: {}}
+            # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
+            json_data = json.loads(data)
+            results[guid].update(json_data)
+
+            # print(len(json_data))
+
+            # Add to ES
+            # for name, common in commons.gen3_commons.items():
+            for name, common in commons.adapter_commons.items():
+                # print(common)
+                # print(results)
+                await populate_metadata(name, common, results, False)
+
+        # put
+        elif rest_route == "PUT":
+            print("PUT not implemented")
+            pass
+
+        # delete
+        elif rest_route == "DELETE":
+            print("DELETE not implemented")
+            pass
 
 @mod.get("/aggregate/commons")
 async def get_commons():

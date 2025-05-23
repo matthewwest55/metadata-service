@@ -13,9 +13,9 @@ class PubSubClient():
     def publish(self, channel: str, message: str):
         redis_publish(self.client, channel, message)
 
-    def subscribe(self, channel):
-        self.sub_client = self.client.pubsub()
-        self.sub_client.subscribe(channel)
+    # def subscribe(self, channel):
+    #     self.sub_client = self.client.pubsub()
+    #     self.sub_client.subscribe(channel)
 
-    def listen(self):
-        self.sub_client.listen()
+    # def listen(self):
+    #     self.sub_client.listen()
