@@ -121,7 +121,8 @@ async def join_mesh(ip_address:str, hostname:str, channel_name:str):
 async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     # Setup connection to Redis
     # Gonna hard-code one ip address for now, will fix with config later
-    pubsub_client = PubSubClient()
+    # pubsub_client = PubSubClient()
+    redis_client = redis.Redis(host=ip_address, port=6379, db=0)
     channel = channel_name
 
     # 2. Make redis spin
@@ -130,7 +131,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     last_index = "-"
     while True:
         print("trying to get message now")
-        message = pubsub_client.client.xrange(channel, last_index, "+", 1)
+        message = redis_client.xrange(channel, last_index, "+", 1)
         print("got message")
 
         print(f"message: {message}")
