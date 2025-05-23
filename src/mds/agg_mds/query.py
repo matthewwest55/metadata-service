@@ -129,7 +129,11 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     print(f"Subscribed to {channel}. Waiting for messages...")
     last_index = "-"
     while True:
+        print("trying to get message now")
         message = pubsub_client.client.xrange(channel, last_index, "+", 1)
+        print("got message")
+
+        print(f"message: {message}")
         
         # Check if there are any new entries. If not, wait and check again
         if len(message) == 0:
