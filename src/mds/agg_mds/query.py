@@ -126,7 +126,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     # 2. Make redis spin
     pubsub_client.subscribe(channel)
     print(f"Subscribed to {channel}. Waiting for messages...")
-    for message in pubsub_client.listen():
+    for message in pubsub_client.sub_client.listen():
         if message['type'] == 'message':
             message_data = message['data'].decode('utf-8')
             # print(f"Received: {message_data}")
