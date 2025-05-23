@@ -7,4 +7,4 @@ def get_redis_client(host, port, db):
 def redis_publish(client: redis.Redis, channel:str, message:str):
     print(message)
     client.publish(channel, message)
-    client.xadd(channel, {message})
+    client.xadd(channel, {"message": message})
