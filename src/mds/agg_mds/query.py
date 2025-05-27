@@ -30,6 +30,8 @@ def parse_config_from_file(path: Path) -> Optional[Commons]:
 
 commons = parse_config_from_file(Path("./agg_mds_config.json"))
 
+agg_mds_subscription_pool = Dict[str, threading.Thread]()
+
 async def populate_metadata(name: str, common, results, use_temp_index=False):
     await datastore.init(hostname=url_parts.hostname, port=url_parts.port)
     mds_arr = [{k: v} for k, v in results.items()]
@@ -116,7 +118,17 @@ async def join_mesh(ip_address:str, hostname:str, channel_name:str):
     # Will this lead to memory leaks if I don't close threads properly?
     new_thread = threading.Thread(target=asyncio.run, args=(subscribe_to_commons(ip_address, hostname, channel_name),))
     new_thread.start()
-    return "mesh joined"
+    agg_mds_subscription_pool[hostname] = new_thread
+    # need to do error checking here I think
+    return "Mesh Joined"
+
+@mod.get("/aggregate/status/{hostname}")
+async def get_subscription_status(hostname: str):
+    print(len(agg_mds_subscription_pool))
+    if hostname in agg_mds_subscription_pool:
+        return agg_mds_subscription_pool[hostname].is_alive()
+    else:
+        return "Not Found"
 
 async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     # Setup connection to Redis
