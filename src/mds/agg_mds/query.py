@@ -30,7 +30,7 @@ def parse_config_from_file(path: Path) -> Optional[Commons]:
 
 commons = parse_config_from_file(Path("./agg_mds_config.json"))
 
-agg_mds_subscription_pool = Dict[str, threading.Thread]()
+agg_mds_subscription_pool = dict[str, threading.Thread]()
 
 async def populate_metadata(name: str, common, results, use_temp_index=False):
     await datastore.init(hostname=url_parts.hostname, port=url_parts.port)
