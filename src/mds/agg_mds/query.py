@@ -128,10 +128,11 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     # 2. Make redis spin
     # pubsub_client.subscribe(channel)
     print(f"Subscribed to {channel}. Waiting for messages...")
-    last_index = "-"
+    last_index = 0
     while True:
         print("trying to get message now")
-        message = redis_client.xrange(channel, last_index, "+", 1)
+        # message = redis_client.xrange(channel, last_index, "+", 1)
+        message = redis_client.xread(streams={channel: last_index}, count=1)
         print("got message")
 
         print(f"message: {message}")
@@ -141,18 +142,21 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
             time.sleep(1)
             continue
 
-        time_index = message[0][0].decode('utf-8')
-        print(f"Got {time_index} entry")
-        read_data = message[0][1]
-        ms_time_index = time_index.split("-")[0]
+        # time_index = message[0][0].decode('utf-8')
+        # print(f"Got {time_index} entry")
+        # read_data = message[0][1]
+        # ms_time_index = time_index.split("-")[0]
 
         # increment last_index (is this okay? can I assume unique timestamps...)
-        last_index = str(int(ms_time_index) + 1) + "-0"
+        # last_index = str(int(ms_time_index) + 1) + "-0"
+        last_index = message[0][1][-1][0]
+
+        my_data = message[0][1]
 
         my_index = 'message'.encode('utf-8')
-        my_data = read_data[my_index].decode('utf-8')
+        content = my_data[0][1][my_index].decode('utf-8')
 
-        message_array = my_data.split(" ", 2)
+        message_array = content.split(" ", 2)
         rest_route = message_array[0]
         guid = message_array[1]
         data = message_array[2]
