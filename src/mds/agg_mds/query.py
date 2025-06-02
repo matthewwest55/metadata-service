@@ -155,7 +155,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
             time.sleep(1)
             continue
 
-        # print(last_index)
+        print("Last: " + str(last_index))
 
         # time_index = message[0][0].decode('utf-8')
         # print(f"Got {time_index} entry")
