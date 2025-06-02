@@ -33,6 +33,7 @@
 
 import gen3.auth
 import gen3.metadata
+from requests import HTTPError
 from data_generator import *
 import os
 import sys
@@ -58,4 +59,14 @@ for i in range (1, num_repeats+1):
         if i % 10 == 0:
                 print(i)
         sample_metadata = generateGen3SampleMetadata()
-        metadata.create(sample_metadata["gen3_discovery"]["_unique_id"], sample_metadata)
+        wait_for_success = True
+        while(wait_for_success):
+                try:
+                        metadata.create(sample_metadata["gen3_discovery"]["_unique_id"], sample_metadata)
+                        wait_for_success = False
+                except HTTPError as e:
+                        print(f"Error sending {i}, trying again...")
+                        print(e.response.status_code)
+                        print(e.response.text)
+                        # This is stupid but I guess it fixed one problem for now
+                        sample_metadata["gen3_discovery"]["_unique_id"] = sample_metadata["gen3_discovery"]["_unique_id"] + "_again"
