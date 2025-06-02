@@ -125,6 +125,7 @@ async def join_mesh(ip_address:str, hostname:str, channel_name:str):
 @mod.get("/aggregate/status/{hostname}")
 async def get_subscription_status(hostname: str):
     print(len(agg_mds_subscription_pool))
+    print(agg_mds_subscription_pool)
     if hostname in agg_mds_subscription_pool:
         return agg_mds_subscription_pool[hostname].is_alive()
     else:
@@ -142,17 +143,19 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     print(f"Subscribed to {channel}. Waiting for messages...")
     last_index = 0
     while True:
-        print("trying to get message now")
+        # print("trying to get message now")
         # message = redis_client.xrange(channel, last_index, "+", 1)
         message = redis_client.xread(streams={channel: last_index}, count=1)
-        print("got message")
+        # print("got message")
 
-        print(f"message: {message}")
+        # print(f"message: {message}")
         
         # Check if there are any new entries. If not, wait and check again
         if len(message) == 0:
             time.sleep(1)
             continue
+
+        print(last_index)
 
         # time_index = message[0][0].decode('utf-8')
         # print(f"Got {time_index} entry")
