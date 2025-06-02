@@ -155,7 +155,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
             time.sleep(1)
             continue
 
-        print(last_index)
+        # print(last_index)
 
         # time_index = message[0][0].decode('utf-8')
         # print(f"Got {time_index} entry")
@@ -179,8 +179,8 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
         # post
         if rest_route == "POST":
             # print(f"Getting https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
-            print("Got data, doing thing now...")
-            print(data)
+            # print("Got data, doing thing now...")
+            # print(data)
 
             # get the data
             results = {guid: {}}
