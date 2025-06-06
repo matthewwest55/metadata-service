@@ -164,7 +164,7 @@ async def delete_metadata(guid):
 @mod.get("/metadata/matt/publish")
 async def publish_metadata():
     """Publish the metadata currently in the database."""
-    all_metadata = Metadata.query.gino.all()
+    all_metadata = await Metadata.query.gino.all()
 
     return(len(all_metadata))
 
