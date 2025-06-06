@@ -161,7 +161,7 @@ async def delete_metadata(guid):
         raise HTTPException(HTTP_404_NOT_FOUND, f"Not found: {guid}")
 
 
-@mod.post("/metadata/publish")
+@mod.get("/metadata/matt/publish")
 async def publish_metadata():
     """Publish the metadata currently in the database."""
     all_metadata = Metadata.query.gino.all()
