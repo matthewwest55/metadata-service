@@ -166,6 +166,12 @@ async def publish_metadata():
     """Publish the metadata currently in the database."""
     all_metadata = await Metadata.query.gino.all()
 
+    print(all_metadata)
+
+    # okay, need to just iterate over all the metadata that is in the store and publish it
+    for metadata in all_metadata:
+        pub_sub_client.publish(channel, "POST " + str(metadata.guid) + " " + json.dumps(metadata.data))
+
     return(len(all_metadata))
 
 
