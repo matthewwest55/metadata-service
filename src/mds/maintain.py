@@ -115,9 +115,10 @@ async def create_metadata(guid, data: dict, overwrite: bool = False):
         except UniqueViolationError:
             raise HTTPException(HTTP_409_CONFLICT, f"Conflict: {guid}")
     if created:
+        pass
         # pub_sub_client.publish(channel, "testingPOST-GUID")
-        pub_sub_client.publish(channel, "POST " + str(guid) + " " + json.dumps(data))
-        return JSONResponse(rv["data"], HTTP_201_CREATED)
+        # pub_sub_client.publish(channel, "POST " + str(guid) + " " + json.dumps(data))
+        # return JSONResponse(rv["data"], HTTP_201_CREATED)
     else:
         return rv["data"]
 
@@ -158,6 +159,14 @@ async def delete_metadata(guid):
         return metadata.data
     else:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Not found: {guid}")
+
+
+@mod.post("/metadata/publish")
+async def publish_metadata():
+    """Publish the metadata currently in the database."""
+    all_metadata = Metadata.query.gino.all()
+
+    return(len(all_metadata))
 
 
 def init_app(app):
