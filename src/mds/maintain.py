@@ -162,7 +162,8 @@ async def delete_metadata(guid):
 
 
 # This should be made into a post request with a better endpoint, I'll deal with that later
-@mod.get("/metadata/publish")
+# Might this also go into its own file? 
+@mod.get("/publish")
 async def publish_metadata():
     """Publish the metadata currently in the database."""
     all_metadata = await Metadata.query.gino.all()
