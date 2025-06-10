@@ -161,12 +161,13 @@ async def delete_metadata(guid):
         raise HTTPException(HTTP_404_NOT_FOUND, f"Not found: {guid}")
 
 
-@mod.get("/metadata/matt/publish")
+# This should be made into a post request with a better endpoint, I'll deal with that later
+@mod.get("/metadata/publish")
 async def publish_metadata():
     """Publish the metadata currently in the database."""
     all_metadata = await Metadata.query.gino.all()
 
-    print(all_metadata)
+    # print(all_metadata)
 
     # okay, need to just iterate over all the metadata that is in the store and publish it
     for metadata in all_metadata:
