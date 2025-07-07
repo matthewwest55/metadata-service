@@ -164,9 +164,47 @@ async def delete_metadata(guid):
 # This should be made into a post request with a better endpoint, I'll deal with that later
 # Might this also go into its own file? 
 @mod.get("/publish")
-async def publish_metadata():
+async def publish_metadata(request: Request):
     """Publish the metadata currently in the database."""
-    all_metadata = await Metadata.query.gino.all()
+    
+    queries = {}
+    for key, value in request.query_params.multi_items():
+        if key not in {"data", "limit", "offset"}:
+            queries.setdefault(key, []).append(value)
+
+    def add_filter(query):
+        for path, values in queries.items():
+            if "*" in values:
+                # query all records with a value for this path
+                path = list(path.split("."))
+                field = path.pop()
+                query = query.where(Metadata.data[path].has_key(field))
+            else:
+                values = ["*" if v == "\*" else v for v in values]
+                if "." in path:
+                    path = list(path.split("."))
+                query = query.where(
+                    db.or_(Metadata.data[path].astext == v for v in values)
+                )
+
+        # TODO/FIXME: There's no updated date on the records, and without that
+        # this "pagination" is prone to produce inconsistent results if someone is
+        # trying to paginate using offset WHILE data is being added
+        #
+        # The only real way to try and reduce that risk
+        # is to order by updated date (so newly added stuff is
+        # at the end and new records don't end up in a page earlier on)
+        # This is how our indexing service handles this situation.
+        #
+        # But until we have an updated_date, we can't do that, so naively order by
+        # GUID for now and accept this inconsistency risk.
+        query = query.order_by(Metadata.guid)
+
+        return query
+
+    all_metadata = await add_filter(Metadata.query).gino.all()
+
+    # all_metadata = await Metadata.query.gino.all()
 
     # print(all_metadata)
 
