@@ -171,11 +171,10 @@ async def publish_metadata():
     # print(all_metadata)
 
     # okay, need to just iterate over all the metadata that is in the store and publish it
-    for metadata in all_metadata:
-        pub_sub_client.publish(channel, "POST " + str(metadata.guid) + " " + json.dumps(metadata.data))
+    # LEFT-OFF: want to put this inside an async function so we don't block
+    pub_sub_client.batch_publish(channel, all_metadata)
 
     return(len(all_metadata))
-
 
 def init_app(app):
     app.include_router(mod, tags=["Maintain"], dependencies=[Depends(admin_required)])
