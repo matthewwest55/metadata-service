@@ -2,7 +2,9 @@
 import redis
 
 def get_redis_client(host, port, db):
-    return redis.Redis(host=host, port=port, db=db)
+    # Don't commit secrets in the future!
+    redis_client = redis.Redis(host=host, port=port, db=db, password="temporary_password")
+    return redis_client
 
 def redis_publish(client: redis.Redis, channel:str, message:str):
     # print(message)
