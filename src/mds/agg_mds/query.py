@@ -135,7 +135,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     # Setup connection to Redis
     # Gonna hard-code one ip address for now, will fix with config later
     # pubsub_client = PubSubClient()
-    redis_client = redis.Redis(host=ip_address, port=6379, db=0)
+    redis_client = redis.Redis(host=ip_address, port=6379, db=0, password="temporary_password")
     channel = channel_name
 
     # 2. Make redis spin
