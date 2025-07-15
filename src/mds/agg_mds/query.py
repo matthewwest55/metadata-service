@@ -15,15 +15,15 @@ from typing import Any, Optional
 from pathlib import Path
 from ..pub_sub import PubSubClient
 
-class subscription_listening_thread(threading.Thread):
-    def __init__(self, ip_address, hostname, channel_name):
-        self.ip_address = ip_address
-        self.hostname = hostname
-        self.channel_name = channel_name
-        self.stay_alive = True
+# class subscription_listening_thread(threading.Thread):
+#     def __init__(self, ip_address, hostname, channel_name):
+#         self.ip_address = ip_address
+#         self.hostname = hostname
+#         self.channel_name = channel_name
+#         self.stay_alive = True
 
-    def run(self):
-        subscribe_to_commons(self.ip_address, self.hostname, self.channel_name)
+#     def run(self):
+#         subscribe_to_commons(self.ip_address, self.hostname, self.channel_name)
 
 mod = APIRouter()
 url_parts = urlparse(config.ES_ENDPOINT)
@@ -126,8 +126,8 @@ async def populate_metadata(name: str, common, results, use_temp_index=False):
 @mod.get("/aggregate/join")
 async def join_mesh(ip_address:str, hostname:str, channel_name:str):
     # Will this lead to memory leaks if I don't close threads properly?
-    # new_thread = threading.Thread(target=asyncio.run, args=(subscribe_to_commons(ip_address, hostname, channel_name),))
-    new_thread = subscription_listening_thread(ip_address, hostname, channel_name)
+    new_thread = threading.Thread(target=asyncio.run, args=(subscribe_to_commons(ip_address, hostname, channel_name),))
+    # new_thread = subscription_listening_thread(ip_address, hostname, channel_name)
     new_thread.start()
     agg_mds_subscription_pool[hostname] = new_thread
     # need to do error checking here I think
