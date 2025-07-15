@@ -145,7 +145,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     while True:
         # print("trying to get message now")
         # message = redis_client.xrange(channel, last_index, "+", 1)
-        message = redis_client.xread(streams={channel: last_index}, count=1)
+        message = redis_client.xread(streams={channel: last_index}, count=100)
         # print("got message")
 
         # print(f"message: {message}")
@@ -169,33 +169,34 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
         my_data = message[0][1]
 
         my_index = 'message'.encode('utf-8')
-        content = my_data[0][1][my_index].decode('utf-8')
+        for i in range(0, len(my_data)):
+            content = my_data[0][1][my_index].decode('utf-8')
 
-        message_array = content.split(" ", 2)
-        rest_route = message_array[0]
-        guid = message_array[1]
-        data = message_array[2]
-        # 3. Make switch statement to update ES according to redis updates
-        # post
-        if rest_route == "POST":
-            # print(f"Getting https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
-            # print("Got data, doing thing now...")
-            # print(data)
+            message_array = content.split(" ", 2)
+            rest_route = message_array[0]
+            guid = message_array[1]
+            data = message_array[2]
+            # 3. Make switch statement to update ES according to redis updates
+            # post
+            if rest_route == "POST":
+                # print(f"Getting https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
+                # print("Got data, doing thing now...")
+                # print(data)
 
-            # get the data
-            results = {guid: {}}
-            # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
-            json_data = json.loads(data)
-            results[guid].update(json_data)
+                # get the data
+                results = {guid: {}}
+                # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
+                json_data = json.loads(data)
+                results[guid].update(json_data)
 
-            # print(len(json_data))
+                # print(len(json_data))
 
-            # Add to ES
-            # for name, common in commons.gen3_commons.items():
-            for name, common in commons.adapter_commons.items():
-                # print(common)
-                # print(results)
-                await populate_metadata(name, common, results, False)
+                # Add to ES
+                # for name, common in commons.gen3_commons.items():
+                for name, common in commons.adapter_commons.items():
+                    # print(common)
+                    # print(results)
+                    await populate_metadata(name, common, results, False)
 
         # put
         elif rest_route == "PUT":
