@@ -184,7 +184,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
 
         my_index = 'message'.encode('utf-8')
         for i in range(0, len(my_data)):
-            content = my_data[0][1][my_index].decode('utf-8')
+            content = my_data[i][1][my_index].decode('utf-8')
 
             message_array = content.split(" ", 2)
             rest_route = message_array[0]
