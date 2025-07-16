@@ -159,7 +159,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     while True:
         # print("trying to get message now")
         # message = redis_client.xrange(channel, last_index, "+", 1)
-        message = redis_client.xread(streams={channel: last_index}, count=100)
+        message = redis_client.xread(streams={channel: last_index}, count=1000)
         # print("got message")
 
         # print(f"message: {message}")
@@ -183,6 +183,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
         my_data = message[0][1]
 
         my_index = 'message'.encode('utf-8')
+        results = {}
         for i in range(0, len(my_data)):
             content = my_data[i][1][my_index].decode('utf-8')
 
@@ -198,19 +199,12 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
                 # print(data)
 
                 # get the data
-                results = {guid: {}}
+                results[guid] = {}
                 # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
                 json_data = json.loads(data)
                 results[guid].update(json_data)
 
                 # print(len(json_data))
-
-                # Add to ES
-                # for name, common in commons.gen3_commons.items():
-                for name, common in commons.adapter_commons.items():
-                    # print(common)
-                    # print(results)
-                    await populate_metadata(name, common, results, False)
 
             # put
             elif rest_route == "PUT":
@@ -221,6 +215,13 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
             elif rest_route == "DELETE":
                 print("DELETE not implemented")
                 pass
+
+            # Add to ES
+            # for name, common in commons.gen3_commons.items():
+            for name, common in commons.adapter_commons.items():
+                # print(common)
+                # print(results)
+                await populate_metadata(name, common, results, False)
 
 @mod.get("/aggregate/commons")
 async def get_commons():
