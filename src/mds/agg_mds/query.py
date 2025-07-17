@@ -191,6 +191,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
             rest_route = message_array[0]
             guid = message_array[1]
             data = message_array[2]
+            json_data = json.loads(data)
             # 3. Make switch statement to update ES according to redis updates
             # post
             if rest_route == "POST":
@@ -201,7 +202,6 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
                 # get the data
                 results[guid] = {}
                 # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
-                json_data = json.loads(data)
                 results[guid].update(json_data)
 
                 # print(len(json_data))
@@ -216,12 +216,12 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
                 print("DELETE not implemented")
                 pass
 
-            # Add to ES
-            # for name, common in commons.gen3_commons.items():
-            for name, common in commons.adapter_commons.items():
-                # print(common)
-                # print(results)
-                await populate_metadata(name, common, results, False)
+        # Add to ES
+        # for name, common in commons.gen3_commons.items():
+        for name, common in commons.adapter_commons.items():
+            # print(common)
+            # print(results)
+            await populate_metadata(name, common, results, False)
 
 @mod.get("/aggregate/commons")
 async def get_commons():
