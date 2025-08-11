@@ -48,6 +48,10 @@ async def update_metadata(*args):
     await client.update_metadata(*args)
 
 
+async def update_metadata_bulk(*args):
+    await client.update_metadata_bulk(*args)
+
+
 async def update_global_info(*args):
     await client.update_global_info(*args)
 

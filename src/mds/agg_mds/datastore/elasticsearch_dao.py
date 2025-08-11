@@ -234,6 +234,42 @@ async def update_metadata(
             print(f"Failed to index document in index: {index_to_update}")
             raise (ex)
 
+async def update_metadata_bulk(
+    name: str,
+    data: List[Dict],
+    guid_arr: List[str],
+    tags: Dict[str, List[str]],
+    info: Dict[str, str],
+    use_temp_index: bool = False,
+):
+    index_to_update = AGG_MDS_INFO_INDEX_TEMP if use_temp_index else AGG_MDS_INFO_INDEX
+    elastic_search_client.index(
+        index=index_to_update,
+        id=name,
+        body=info,
+    )
+
+    index_to_update = AGG_MDS_INDEX_TEMP if use_temp_index else AGG_MDS_INDEX
+    doc_list = []
+    for d in data:
+        key = list(d.keys())[0]
+        # Flatten out this structure
+        doc = {
+            AGG_MDS_DEFAULT_STUDY_DATA_FIELD: d[key][AGG_MDS_DEFAULT_STUDY_DATA_FIELD]
+        }
+        if AGG_MDS_DEFAULT_DATA_DICT_FIELD in d[key]:
+            doc[AGG_MDS_DEFAULT_DATA_DICT_FIELD] = d[key][
+                AGG_MDS_DEFAULT_DATA_DICT_FIELD
+            ]
+        
+        # This assumes the "index" action for ES
+        doc_list.append(doc)
+
+    try:
+        helpers.bulk(elastic_search_client, doc_list, index=index_to_update)
+    except Exception as ex:
+        print(f"Failed to bulk index document in index: {index_to_update}")
+        raise (ex)
 
 async def update_global_info(key, doc, use_temp_index: bool = False) -> None:
     index_to_update = AGG_MDS_INFO_INDEX_TEMP if use_temp_index else AGG_MDS_INFO_INDEX

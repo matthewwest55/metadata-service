@@ -120,18 +120,22 @@ async def populate_metadata(name: str, common, results, use_temp_index=False):
     keys = list(results.keys())
     info = {"commons_url": common.commons_url}
 
-    await datastore.update_metadata(name, mds_arr, keys, tags, info, use_temp_index)
+    await datastore.update_metadata_bulk(name, mds_arr, keys, tags, info, use_temp_index)
 
 
 @mod.get("/aggregate/join")
 async def join_mesh(ip_address:str, hostname:str, channel_name:str):
-    # Will this lead to memory leaks if I don't close threads properly?
-    new_thread = threading.Thread(target=asyncio.run, args=(subscribe_to_commons(ip_address, hostname, channel_name),))
-    # new_thread = subscription_listening_thread(ip_address, hostname, channel_name)
-    new_thread.start()
-    agg_mds_subscription_pool[hostname] = new_thread
-    # need to do error checking here I think
-    return "Mesh Joined"
+    # TO-DO: Add overwrite option
+    if hostname not in agg_mds_subscription_pool:
+        # Will this lead to memory leaks if I don't close threads properly?
+        new_thread = threading.Thread(target=asyncio.run, args=(subscribe_to_commons(ip_address, hostname, channel_name),))
+        # new_thread = subscription_listening_thread(ip_address, hostname, channel_name)
+        new_thread.start()
+        agg_mds_subscription_pool[hostname] = new_thread
+        # need to do error checking here I think
+        return "Mesh Joined"
+    else:
+        return "Already Joined"
 
 @mod.get("/aggregate/status/{hostname}")
 async def get_subscription_status(hostname: str):
