@@ -160,17 +160,9 @@ async def delete_metadata(guid):
     else:
         raise HTTPException(HTTP_404_NOT_FOUND, f"Not found: {guid}")
 
-@mod.delete("/metadata/")
+@mod.delete("/delete_all")
 async def delete_all_metadata():
-    """Delete the metadata of the GUID."""
-    metadata = (
-        await Metadata.delete.gino.status()
-    )
-    # if metadata:
-    #     pub_sub_client.publish(channel, "DELETE " + str(guid))
-    #     return metadata.data
-    # else:
-    # raise HTTPException(HTTP_404_NOT_FOUND, f"Not found: {guid}")
+    await Metadata.delete.gino.status()
 
 # This should be made into a post request with a better endpoint, I'll deal with that later
 # Might this also go into its own file? 
