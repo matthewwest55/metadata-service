@@ -136,6 +136,13 @@ async def join_mesh(ip_address:str, hostname:str, channel_name:str):
         return "Mesh Joined"
     else:
         return "Already Joined"
+    
+@mod.get("/aggregate/leave/{hostname}")
+async def leave_mesh(hostname: str):
+    if hostname in agg_mds_subscription_pool:
+        del agg_mds_subscription_pool[hostname]
+        return "Left Mesh"
+    return "Not Already in Mesh"
 
 @mod.get("/aggregate/status/{hostname}")
 async def get_subscription_status(hostname: str):
@@ -150,6 +157,7 @@ async def get_subscription_status(hostname: str):
         return "Not Found"
 
 async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
+    # TO-DO: Add a timeout to this so it dies after a while (need to also make joining automatic when publishing)
     # Setup connection to Redis
     # Gonna hard-code one ip address for now, will fix with config later
     # pubsub_client = PubSubClient()
