@@ -40,6 +40,8 @@ def parse_config_from_file(path: Path) -> Optional[Commons]:
 
 commons = parse_config_from_file(Path("./agg_mds_config.json"))
 
+# Need to make a mutex for accessing this or something?
+# I don't think I should need to based on the logic I've written, but I may need to
 agg_mds_subscription_pool = dict[str, threading.Thread]()
 
 async def populate_metadata(name: str, common, results, use_temp_index=False):
@@ -124,23 +126,31 @@ async def populate_metadata(name: str, common, results, use_temp_index=False):
 
 
 @mod.get("/aggregate/join")
-async def join_mesh(ip_address:str, hostname:str, channel_name:str):
-    # TO-DO: Add overwrite option
-    if hostname not in agg_mds_subscription_pool:
+async def join_mesh(ip_address:str, hostname:str, channel_name:str, override=False):
+    # TO-DO: Add override option
+    # Override option here has a bug where it may not close the previous thread if this goes too quickly
+    if hostname not in agg_mds_subscription_pool or (hostname in agg_mds_subscription_pool and override):
         # Will this lead to memory leaks if I don't close threads properly?
         new_thread = threading.Thread(target=asyncio.run, args=(subscribe_to_commons(ip_address, hostname, channel_name),))
         # new_thread = subscription_listening_thread(ip_address, hostname, channel_name)
-        new_thread.start()
+        if hostname in agg_mds_subscription_pool:
+            dying_process = agg_mds_subscription_pool[hostname]
+            del agg_mds_subscription_pool[hostname]
+            dying_process.join()
         agg_mds_subscription_pool[hostname] = new_thread
+        new_thread.start()
         # need to do error checking here I think
         return "Mesh Joined"
     else:
-        return "Already Joined"
+        return "Already Joined And No Override"
     
 @mod.get("/aggregate/leave/{hostname}")
 async def leave_mesh(hostname: str):
     if hostname in agg_mds_subscription_pool:
+        # need to add code for killing process, otherwise it becomes a zombie
+        dying_process = agg_mds_subscription_pool[hostname]
         del agg_mds_subscription_pool[hostname]
+        dying_process.join()
         return "Left Mesh"
     return "Not Already in Mesh"
 
@@ -161,6 +171,7 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     # Setup connection to Redis
     # Gonna hard-code one ip address for now, will fix with config later
     # pubsub_client = PubSubClient()
+    global agg_mds_subscription_pool
     redis_client = redis.Redis(host=ip_address, port=6379, db=0, password="temporary_password")
     channel = channel_name
 
@@ -169,6 +180,9 @@ async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
     print(f"Subscribed to {channel}. Waiting for messages...")
     last_index = 0
     while True:
+        # Will this work? I need to make this pool a shared variable
+        if hostname not in agg_mds_subscription_pool:
+            break
         # print("trying to get message now")
         # message = redis_client.xrange(channel, last_index, "+", 1)
         message = redis_client.xread(streams={channel: last_index}, count=1000)
