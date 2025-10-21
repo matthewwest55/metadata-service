@@ -15,15 +15,95 @@ from typing import Any, Optional
 from pathlib import Path
 from ..pub_sub import PubSubClient
 
-# class subscription_listening_thread(threading.Thread):
-#     def __init__(self, ip_address, hostname, channel_name):
-#         self.ip_address = ip_address
-#         self.hostname = hostname
-#         self.channel_name = channel_name
-#         self.stay_alive = True
+class subscription_listening_thread(threading.Thread):
+    def __init__(self, ip_address, hostname, channel_name):
+        super(subscription_listening_thread, self).__init__()
+        self.ip_address = ip_address
+        self.hostname = hostname
+        self.channel_name = channel_name
+        self.stay_alive = True
 
-#     def run(self):
-#         subscribe_to_commons(self.ip_address, self.hostname, self.channel_name)
+    def run(self):
+        self.subscribe_to_commons(self.ip_address, self.hostname, self.channel_name)
+
+    async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
+        # TO-DO: Add a timeout to this so it dies after a while (need to also make joining automatic when publishing)
+        # Setup connection to Redis
+        # Gonna hard-code one ip address for now, will fix with config later
+        # pubsub_client = PubSubClient()
+        redis_client = redis.Redis(host=ip_address, port=6379, db=0, password="temporary_password")
+        channel = channel_name
+
+        # 2. Make redis spin
+        # pubsub_client.subscribe(channel)
+        print(f"Subscribed to {channel}. Waiting for messages...")
+        last_index = 0
+        while self.stay_alive:
+            # print("trying to get message now")
+            # message = redis_client.xrange(channel, last_index, "+", 1)
+            message = redis_client.xread(streams={channel: last_index}, count=1000)
+            # print("got message")
+
+            # print(f"message: {message}")
+            
+            # Check if there are any new entries. If not, wait and check again
+            if len(message) == 0:
+                time.sleep(1)
+                continue
+
+            print("Last: " + str(last_index))
+
+            # time_index = message[0][0].decode('utf-8')
+            # print(f"Got {time_index} entry")
+            # read_data = message[0][1]
+            # ms_time_index = time_index.split("-")[0]
+
+            # increment last_index (is this okay? can I assume unique timestamps...)
+            # last_index = str(int(ms_time_index) + 1) + "-0"
+            last_index = message[0][1][-1][0]
+
+            my_data = message[0][1]
+
+            my_index = 'message'.encode('utf-8')
+            results = {}
+            for i in range(0, len(my_data)):
+                content = my_data[i][1][my_index].decode('utf-8')
+
+                message_array = content.split(" ", 2)
+                rest_route = message_array[0]
+                guid = message_array[1]
+                data = message_array[2]
+                json_data = json.loads(data)
+                # 3. Make switch statement to update ES according to redis updates
+                # post
+                if rest_route == "POST":
+                    # print(f"Getting https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
+                    # print("Got data, doing thing now...")
+                    # print(data)
+
+                    # get the data
+                    results[guid] = {}
+                    # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
+                    results[guid].update(json_data)
+
+                    # print(len(json_data))
+
+                # put
+                elif rest_route == "PUT":
+                    print("PUT not implemented")
+                    pass
+
+                # delete
+                elif rest_route == "DELETE":
+                    print("DELETE not implemented")
+                    pass
+
+            # Add to ES
+            # for name, common in commons.gen3_commons.items():
+            for name, common in commons.adapter_commons.items():
+                # print(common)
+                # print(results)
+                await populate_metadata(name, common, results, False)
 
 mod = APIRouter()
 url_parts = urlparse(config.ES_ENDPOINT)
@@ -131,10 +211,11 @@ async def join_mesh(ip_address:str, hostname:str, channel_name:str, override=Fal
     # Override option here has a bug where it may not close the previous thread if this goes too quickly
     if hostname not in agg_mds_subscription_pool or (hostname in agg_mds_subscription_pool and override):
         # Will this lead to memory leaks if I don't close threads properly?
-        new_thread = threading.Thread(target=asyncio.run, args=(subscribe_to_commons(ip_address, hostname, channel_name),))
-        # new_thread = subscription_listening_thread(ip_address, hostname, channel_name)
+        # new_thread = threading.Thread(target=asyncio.run, args=(subscribe_to_commons(ip_address, hostname, channel_name),))
+        new_thread = subscription_listening_thread(ip_address, hostname, channel_name)
         if hostname in agg_mds_subscription_pool:
             dying_process = agg_mds_subscription_pool[hostname]
+            dying_process.stay_alive = False
             del agg_mds_subscription_pool[hostname]
             dying_process.join()
         agg_mds_subscription_pool[hostname] = new_thread
@@ -149,6 +230,7 @@ async def leave_mesh(hostname: str):
     if hostname in agg_mds_subscription_pool:
         # need to add code for killing process, otherwise it becomes a zombie
         dying_process = agg_mds_subscription_pool[hostname]
+        dying_process.stay_alive = False
         del agg_mds_subscription_pool[hostname]
         dying_process.join()
         return "Left Mesh"
@@ -165,89 +247,6 @@ async def get_subscription_status(hostname: str):
             return "Found - In Error"
     else:
         return "Not Found"
-
-async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
-    # TO-DO: Add a timeout to this so it dies after a while (need to also make joining automatic when publishing)
-    # Setup connection to Redis
-    # Gonna hard-code one ip address for now, will fix with config later
-    # pubsub_client = PubSubClient()
-    global agg_mds_subscription_pool
-    redis_client = redis.Redis(host=ip_address, port=6379, db=0, password="temporary_password")
-    channel = channel_name
-
-    # 2. Make redis spin
-    # pubsub_client.subscribe(channel)
-    print(f"Subscribed to {channel}. Waiting for messages...")
-    last_index = 0
-    while True:
-        # Will this work? I need to make this pool a shared variable
-        if hostname not in agg_mds_subscription_pool:
-            break
-        # print("trying to get message now")
-        # message = redis_client.xrange(channel, last_index, "+", 1)
-        message = redis_client.xread(streams={channel: last_index}, count=1000)
-        # print("got message")
-
-        # print(f"message: {message}")
-        
-        # Check if there are any new entries. If not, wait and check again
-        if len(message) == 0:
-            time.sleep(1)
-            continue
-
-        print("Last: " + str(last_index))
-
-        # time_index = message[0][0].decode('utf-8')
-        # print(f"Got {time_index} entry")
-        # read_data = message[0][1]
-        # ms_time_index = time_index.split("-")[0]
-
-        # increment last_index (is this okay? can I assume unique timestamps...)
-        # last_index = str(int(ms_time_index) + 1) + "-0"
-        last_index = message[0][1][-1][0]
-
-        my_data = message[0][1]
-
-        my_index = 'message'.encode('utf-8')
-        results = {}
-        for i in range(0, len(my_data)):
-            content = my_data[i][1][my_index].decode('utf-8')
-
-            message_array = content.split(" ", 2)
-            rest_route = message_array[0]
-            guid = message_array[1]
-            data = message_array[2]
-            json_data = json.loads(data)
-            # 3. Make switch statement to update ES according to redis updates
-            # post
-            if rest_route == "POST":
-                # print(f"Getting https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
-                # print("Got data, doing thing now...")
-                # print(data)
-
-                # get the data
-                results[guid] = {}
-                # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
-                results[guid].update(json_data)
-
-                # print(len(json_data))
-
-            # put
-            elif rest_route == "PUT":
-                print("PUT not implemented")
-                pass
-
-            # delete
-            elif rest_route == "DELETE":
-                print("DELETE not implemented")
-                pass
-
-        # Add to ES
-        # for name, common in commons.gen3_commons.items():
-        for name, common in commons.adapter_commons.items():
-            # print(common)
-            # print(results)
-            await populate_metadata(name, common, results, False)
 
 @mod.get("/aggregate/commons")
 async def get_commons():
