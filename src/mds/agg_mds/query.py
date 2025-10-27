@@ -24,7 +24,8 @@ class subscription_listening_thread(threading.Thread):
         self.stay_alive = True
 
     def run(self):
-        self.subscribe_to_commons(self.ip_address, self.hostname, self.channel_name)
+        while self.stay_alive:
+            self.subscribe_to_commons(self.ip_address, self.hostname, self.channel_name)
 
     async def subscribe_to_commons(self, ip_address:str, hostname:str, channel_name:str):
         # TO-DO: Add a timeout to this so it dies after a while (need to also make joining automatic when publishing)
