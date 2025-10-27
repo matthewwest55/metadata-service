@@ -26,7 +26,7 @@ class subscription_listening_thread(threading.Thread):
     def run(self):
         self.subscribe_to_commons(self.ip_address, self.hostname, self.channel_name)
 
-    async def subscribe_to_commons(ip_address:str, hostname:str, channel_name:str):
+    async def subscribe_to_commons(self, ip_address:str, hostname:str, channel_name:str):
         # TO-DO: Add a timeout to this so it dies after a while (need to also make joining automatic when publishing)
         # Setup connection to Redis
         # Gonna hard-code one ip address for now, will fix with config later
