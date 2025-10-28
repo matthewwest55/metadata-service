@@ -42,7 +42,7 @@ num_repeats = int(sys.argv[1])
 
 refresh_token = os.popen('kubectl exec -c fence $(kubectl get pods | grep "^fence-deployment" | awk \'{print $1}\') -- fence-create token-create --scopes openid,user,fence,data,credentials,google_service_account --type access_token --exp 3600 --username test | tail -1').read().strip()
 print(refresh_token)
-auth = gen3.auth.Gen3Auth(endpoint="https://alt.data-one.dev.planx-pla.net", access_token=refresh_token)
+auth = gen3.auth.Gen3Auth(endpoint="https://alt.data-instance-x.dev.planx-pla.net", access_token=refresh_token)
 
 #auth = gen3.auth.Gen3Auth(endpoint="https://data-instance-2.dev.planx-pla.net", refresh_file="./data-instance-2.json")
 #print(auth.get_access_token())

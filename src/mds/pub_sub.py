@@ -9,7 +9,7 @@ class PubSubClient():
     sub_client:redis.Redis = None
 
     def __init__(self):
-        self.client = get_redis_client('alt.data-one.dev.planx-pla.net', 6379, 0)
+        self.client = get_redis_client('alt.data-instance-x.dev.planx-pla.net', 6379, 0)
 
     def publish(self, channel: str, message: str):
         redis_publish(self.client, channel, message)

@@ -205,11 +205,11 @@ async def publish_metadata(request: Request):
 
         return query
 
-    all_metadata = await add_filter(Metadata.query).gino.all()
+    # all_metadata = await add_filter(Metadata.query).gino.all()
 
-    # all_metadata = await Metadata.query.gino.all()
+    all_metadata = await Metadata.query.gino.all()
 
-    # print(all_metadata)
+    print(all_metadata)
 
     # okay, need to just iterate over all the metadata that is in the store and publish it
     # LEFT-OFF: want to put this inside an async function so we don't block
