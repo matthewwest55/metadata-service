@@ -104,8 +104,9 @@ class SubscriptionListeningThread(threading.Thread):
         self.stay_alive = True
 
     def run(self):
-        while self.stay_alive:
-            await self.subscribe_to_commons(self.ip_address, self.hostname, self.channel_name)
+        # Might not need this while loop, for the record
+        # while self.stay_alive:
+        asyncio.run(self.subscribe_to_commons(self.ip_address, self.hostname, self.channel_name))
 
     async def subscribe_to_commons(self, ip_address:str, hostname:str, channel_name:str):
         # TO-DO: Add a timeout to this so it dies after a while (need to also make joining automatic when publishing)
@@ -123,9 +124,9 @@ class SubscriptionListeningThread(threading.Thread):
             # print("trying to get message now")
             # message = redis_client.xrange(channel, last_index, "+", 1)
             message = redis_client.xread(streams={channel: last_index}, count=1000)
-            print("got message")
+            # print("got message")
 
-            print(f"message: {message}")
+            # print(f"message: {message}")
             
             # Check if there are any new entries. If not, wait and check again
             if len(message) == 0:
