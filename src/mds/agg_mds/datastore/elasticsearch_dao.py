@@ -576,7 +576,7 @@ async def get_count():
         data = client.count(
             index=AGG_MDS_INDEX
         )
-        return data["count"] 
+        return data 
     except Exception as error:
         logger.error(error)
         return None
