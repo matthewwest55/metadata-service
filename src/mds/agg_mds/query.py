@@ -249,7 +249,7 @@ async def get_subscription_status(hostname: str):
         return "Not Found"
 
 @mod.get("/aggregate/count")
-async def get_count_of_agg_mds_data(hostname: str):
+async def get_count_of_agg_mds_data():
     all_data = await datastore.get_count()
     return len(all_data)
 
