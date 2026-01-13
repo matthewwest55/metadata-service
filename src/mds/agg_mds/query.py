@@ -251,7 +251,7 @@ async def get_subscription_status(hostname: str):
 @mod.get("/aggregate/count")
 async def get_count_of_agg_mds_data():
     all_data = await datastore.get_count()
-    return len(all_data)
+    return all_data
 
 @mod.get("/aggregate/commons")
 async def get_commons():
