@@ -86,3 +86,6 @@ async def get_commons():
 
 async def get_all_metadata(*args):
     return await client.get_all_metadata(*args)
+
+async def get_count():
+    return await client.get_count()

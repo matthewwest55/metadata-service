@@ -570,3 +570,13 @@ async def get_by_guid(guid):
     except Exception as error:
         logger.error(error)
         return None
+
+async def get_count():
+    try:
+        data = client.count(
+            index=AGG_MDS_INDEX
+        )
+        return data["count"] 
+    except Exception as error:
+        logger.error(error)
+        return None

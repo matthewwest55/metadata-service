@@ -229,7 +229,6 @@ async def join_mesh(ip_address:str, hostname:str, channel_name:str, override=Fal
 @mod.get("/aggregate/leave/{hostname}")
 async def leave_mesh(hostname: str):
     if hostname in agg_mds_subscription_pool:
-        # need to add code for killing process, otherwise it becomes a zombie
         dying_process = agg_mds_subscription_pool[hostname]
         dying_process.stay_alive = False
         del agg_mds_subscription_pool[hostname]
@@ -248,6 +247,11 @@ async def get_subscription_status(hostname: str):
             return "Found - In Error"
     else:
         return "Not Found"
+
+@mod.get("/aggregate/count")
+async def get_count_of_agg_mds_data(hostname: str):
+    await all_data = datastore.get_all_metadata()
+    return len(all_data)
 
 @mod.get("/aggregate/commons")
 async def get_commons():
