@@ -573,7 +573,7 @@ async def get_by_guid(guid):
 
 async def get_count():
     try:
-        data = client.count(
+        data = elastic_search_client.count(
             index="_all"
         )
         return data

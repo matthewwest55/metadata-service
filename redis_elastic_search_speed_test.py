@@ -91,7 +91,7 @@ while True:
 
 	# Now add it to elastic search
 	async def populate_metadata(name: str, common, results, use_temp_index=False):
-	    await datastore.init(hostname=url_parts.hostname, port=5000)
+	    await datastore.init(hostname=url_parts.hostname, port=9200)
 	    mds_arr = [{k: v} for k, v in results.items()]
 
 	    total_items = len(mds_arr)
