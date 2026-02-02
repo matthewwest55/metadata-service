@@ -1,7 +1,6 @@
 import json
 import re
 import redis
-import threading
 
 from asyncpg import UniqueViolationError
 from fastapi import HTTPException, APIRouter, Depends
@@ -170,6 +169,7 @@ async def delete_all_metadata():
 @mod.get("/publish")
 async def publish_metadata(request: Request):
     """Publish the metadata currently in the database."""
+    # LEFT-OFF: something in this function is blocking and we don't want it to do that, so fix it
     
     queries = {}
     for key, value in request.query_params.multi_items():
@@ -213,10 +213,7 @@ async def publish_metadata(request: Request):
     # print(all_metadata)
 
     # okay, need to just iterate over all the metadata that is in the store and publish it
-    # LEFT-OFF: want to put this inside an async function so we don't block
-
-    publishing_thread = Thread(target=pub_sub_client.batch_publish(channel, all_metadata))
-    publishing_thread.start()
+    # await pub_sub_client.batch_publish(channel, all_metadata)
 
     return(len(all_metadata))
 
