@@ -1,7 +1,7 @@
 import json
 import re
 import redis
-import threading
+from threading import Thread 
 
 from asyncpg import UniqueViolationError
 from fastapi import HTTPException, APIRouter, Depends
@@ -214,8 +214,9 @@ async def publish_metadata(request: Request):
     # print(all_metadata)
 
     # okay, need to just iterate over all the metadata that is in the store and publish it
-    publishing_thread = Thread(target=pub_sub_client.batch_publish(channel, all_metadata))
-    publishing_thread.start()
+    # publishing_thread = Thread(target=pub_sub_client.batch_publish(channel, all_metadata))
+    # publishing_thread.start()
+    await pub_sub_client.batch_publish(channel, all_metadata)
 
     return(len(all_metadata))
 
