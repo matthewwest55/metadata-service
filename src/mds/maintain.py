@@ -213,7 +213,7 @@ async def publish_metadata(request: Request):
     # print(all_metadata)
 
     # okay, need to just iterate over all the metadata that is in the store and publish it
-    # await pub_sub_client.batch_publish(channel, all_metadata)
+    pub_sub_client.batch_publish(channel, all_metadata)
 
     return(len(all_metadata))
 
