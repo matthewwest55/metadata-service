@@ -1,6 +1,7 @@
 import json
 import re
 import redis
+import asyncio
 
 from asyncpg import UniqueViolationError
 from fastapi import HTTPException, APIRouter, Depends
@@ -213,7 +214,7 @@ async def publish_metadata(request: Request):
 
     # okay, need to just iterate over all the metadata that is in the store and publish it
     # LEFT-OFF: want to put this inside an async function so we don't block
-    pub_sub_client.batch_publish(channel, all_metadata)
+    asyncio.run(pub_sub_client.batch_publish(channel, all_metadata))
 
     return(len(all_metadata))
 
