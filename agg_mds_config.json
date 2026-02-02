@@ -38,7 +38,7 @@
 			"cache_drs" : true
 		}
 	},
-	"adapter_commons": {
+	"gen3_commons": {
 		"Gen3": {
 			"mds_url": "https://gen3.datacommons.io/",
 			"commons_url": "gen3.datacommons.io/",

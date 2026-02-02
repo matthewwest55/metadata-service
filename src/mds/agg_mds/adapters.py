@@ -253,10 +253,11 @@ class RemoteMetadataAdapter(ABC):
                 if has_default_value:
                     field_value = default_value
                 else:
-                    logger.warning(
-                        f"{key} = None{', is not in the schema,' if key not in schema else ''} "
-                        f"and has no default value. Consider adding {key} to the schema"
-                    )
+                    # logger.warning(
+                    #     f"{key} = None{', is not in the schema,' if key not in schema else ''} "
+                    #     f"and has no default value. Consider adding {key} to the schema"
+                    # )
+                    pass
             jsonpath_expr.update_or_create(results, field_value)
         return results
 
@@ -973,6 +974,7 @@ class Gen3Adapter(RemoteMetadataAdapter):
                 results["results"].update(data)
                 numReturned = len(data)
 
+                # MISTAKE: This should be < only, since limit will equal numReturned if it maxes out
                 if numReturned == 0 or numReturned <= limit:
                     moreData = False
                 offset += numReturned
@@ -1605,8 +1607,8 @@ def gather_metadata(
             globalFieldFilters=globalFieldFilters,
             schema=schema,
         )
-        logger.debug("Result after normalizing: ")
-        logger.debug(results)
+        # logger.debug("Result after normalizing: ")
+        # logger.debug(results)
         return results
     except ValueError as exc:
         logger.error(f"Exception occurred: {exc}. Returning no results")

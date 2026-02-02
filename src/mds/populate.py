@@ -105,7 +105,8 @@ async def populate_metadata(name: str, common, results, use_temp_index=False):
     keys = list(results.keys())
     info = {"commons_url": common.commons_url}
 
-    await datastore.update_metadata(name, mds_arr, keys, tags, info, use_temp_index)
+    # changing this to make comparisons more fair
+    await datastore.update_metadata_bulk(name, mds_arr, keys, tags, info, use_temp_index)
 
 
 async def populate_info(commons_config: Commons, use_temp_index=False) -> None:

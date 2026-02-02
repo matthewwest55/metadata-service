@@ -176,9 +176,9 @@ class FieldDefinition:
         conversion = f"{value_type}_to_{self.type}"
         converter = FieldDefinition.FIELD_NORMALIZATION.get(conversion, None)
         if converter is None:
-            logger.warning(
-                f"warning normalizing {value} via converter {conversion} not applied."
-            )
+            # logger.warning(
+            #     f"warning normalizing {value} via converter {conversion} not applied."
+            # )
             return value
         return converter(value)
 
