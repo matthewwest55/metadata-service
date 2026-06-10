@@ -159,13 +159,13 @@ class SubscriptionListeningThread(threading.Thread):
                 # 3. Make switch statement to update ES according to redis updates
                 # post
                 if rest_route == "POST":
-                    # print(f"Getting https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
+                    # print(f"Getting https://{hostname}.themattwest.com/mds/metadata/{guid}?data=True")
                     # print("Got data, doing thing now...")
                     # print(data)
 
                     # get the data
                     results[guid] = {}
-                    # response = httpx.get(f"https://{hostname}.dev.planx-pla.net/mds/metadata/{guid}?data=True")
+                    # response = httpx.get(f"https://{hostname}.themattwest.com/mds/metadata/{guid}?data=True")
                     results[guid].update(json_data)
 
                     # print(len(json_data))
@@ -205,6 +205,51 @@ commons = parse_config_from_file(Path("./agg_mds_config.json"))
 # Need to make a mutex for accessing this or something?
 # I don't think I should need to based on the logic I've written, but I may need to
 agg_mds_subscription_pool = dict[str, threading.Thread]()
+
+@mod.post("/aggregate/subscribe-endpoint")
+async def update_mesh_metadata(message):
+    my_data = message[0][1]
+
+    my_index = 'message'.encode('utf-8')
+    results = {}
+    for i in range(0, len(my_data)):
+        content = my_data[i][1][my_index].decode('utf-8')
+
+        message_array = content.split(" ", 2)
+        rest_route = message_array[0]
+        guid = message_array[1]
+        data = message_array[2]
+        json_data = json.loads(data)
+        # 3. Make switch statement to update ES according to redis updates
+        # post
+        if rest_route == "POST":
+            # print(f"Getting https://{hostname}.themattwest.com/mds/metadata/{guid}?data=True")
+            # print("Got data, doing thing now...")
+            # print(data)
+
+            # get the data
+            results[guid] = {}
+            # response = httpx.get(f"https://{hostname}.themattwest.com/mds/metadata/{guid}?data=True")
+            results[guid].update(json_data)
+
+            # print(len(json_data))
+
+        # put
+        elif rest_route == "PUT":
+            print("PUT not implemented")
+            pass
+
+        # delete
+        elif rest_route == "DELETE":
+            print("DELETE not implemented")
+            pass
+
+    # Add to ES
+    # for name, common in commons.gen3_commons.items():
+    for name, common in commons.adapter_commons.items():
+        # print(common)
+        # print(results)
+        await populate_metadata(name, common, results, False)
 
 @mod.get("/aggregate/join")
 async def join_mesh(ip_address:str, hostname:str, channel_name:str, override=False):
