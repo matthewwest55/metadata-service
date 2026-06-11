@@ -209,7 +209,7 @@ agg_mds_subscription_pool = dict[str, threading.Thread]()
 
 @mod.post("/aggregate/subscribe-endpoint")
 async def update_mesh_metadata(request: Request):
-    message = await request.body()
+    message = await request.body().decode("utf-8")
     fixed_string = message.replace("\n", "\\n")
     my_data = ast.literal_eval(fixed_string)
 
