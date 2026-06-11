@@ -207,7 +207,8 @@ commons = parse_config_from_file(Path("./agg_mds_config.json"))
 agg_mds_subscription_pool = dict[str, threading.Thread]()
 
 @mod.post("/aggregate/subscribe-endpoint")
-async def update_mesh_metadata(message):
+async def update_mesh_metadata(request: Request):
+    message = await request.body()
     my_data = message[0][1]
 
     my_index = 'message'.encode('utf-8')
