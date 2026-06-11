@@ -8,6 +8,7 @@ import redis
 import threading
 import asyncio
 import time
+import ast
 from urllib.parse import urlparse
 import json
 from mds.agg_mds.commons import MDSInstance, ColumnsToFields, Commons, parse_config
@@ -209,12 +210,15 @@ agg_mds_subscription_pool = dict[str, threading.Thread]()
 @mod.post("/aggregate/subscribe-endpoint")
 async def update_mesh_metadata(request: Request):
     message = await request.body()
-    my_data = message[0][1]
+    my_data = ast.literal_eval(message)
 
-    my_index = 'message'.encode('utf-8')
+    # Need to consider how I'm expecting to receive data
+    # I can just define a format, it doesn't matter much
+
+    # my_index = 'message'.encode('utf-8')
     results = {}
     for i in range(0, len(my_data)):
-        content = my_data[i][1][my_index].decode('utf-8')
+        content = my_data[i][1]["message"]
 
         message_array = content.split(" ", 2)
         rest_route = message_array[0]
