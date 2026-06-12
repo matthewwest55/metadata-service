@@ -226,7 +226,7 @@ async def update_mesh_metadata(request: Request):
     # my_index = 'message'.encode('utf-8')
     results = {}
     for i in range(0, len(my_data)):
-        content = my_data[i][1]["message"]
+        content = my_data[0][1][i][1]["message"]
 
         message_array = content.split(" ", 2)
         rest_route = message_array[0]
