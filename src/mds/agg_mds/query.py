@@ -209,13 +209,16 @@ agg_mds_subscription_pool = dict[str, threading.Thread]()
 
 @mod.post("/aggregate/subscribe-endpoint")
 async def update_mesh_metadata(request: Request):
-    message = await request.json()
-    # message = message_bytes.decode("utf-8")
-    print(message)
+    message_bytes = await request.json()
+    print(message_bytes)
+    message_json = message_bytes.decode("utf-8")
+    message = json.loads(message_json)
     # fixed_string = message.replace("\n", "\\n")
     # my_data = ast.literal_eval(fixed_string)
 
     my_data = message
+
+    print(my_data)
 
     # Need to consider how I'm expecting to receive data
     # I can just define a format, it doesn't matter much
