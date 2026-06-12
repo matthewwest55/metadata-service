@@ -211,6 +211,7 @@ agg_mds_subscription_pool = dict[str, threading.Thread]()
 async def update_mesh_metadata(request: Request):
     message_bytes = await request.body()
     message = message_bytes.decode("utf-8")
+    print(message)
     fixed_string = message.replace("\n", "\\n")
     my_data = ast.literal_eval(fixed_string)
 
@@ -257,6 +258,9 @@ async def update_mesh_metadata(request: Request):
         # print(common)
         # print(results)
         await populate_metadata(name, common, results, False)
+
+    # might need to do some error checking here
+    return len(my_data)
 
 @mod.get("/aggregate/join")
 async def join_mesh(ip_address:str, hostname:str, channel_name:str, override=False):
